@@ -1,3 +1,33 @@
+// 1. If User Logged In : 
+// 	Case 1: Just Logged in new user:
+// 		* Any template chosen will show the initial Values 
+// 			USERDATA: All Fields null.
+// 		* Then as the user interacts with userData the data will get updated
+// 			USERDATA: if User removes a field its valus will be = ""
+
+// 	Case 2: Old User Logging again :
+// 		* User's previous template and userData will be fetched.
+// 			USERDATA = "" for fields that user removed, will have value otherwise. NO UNDEFINED HERE
+
+// 	Case 3: IN CASE PAGE REFRESHED
+// 		* Give the user Warning that all data will be lost. If user still proceeds:
+// 			1. user remains logged in
+// 			2. User's data will be the initial data stored in the login data
+
+// 	Case 4: IN CASE USER CLICKS PREV OR NEX BUTTON
+// 		* Give the user Warning that all data will be lost. If user still proceeds:
+// 			1. user remains logged in
+// 			2. User's data will be the initial data stored in the login data
+
+// 	Case 5: IN CASE USER LOGS OUT 
+// 		* WHAT IF USER LOGS IN DOES NOTHING THEN LOGS OUT ?
+// 			Then his data will be saved as initialValues instead of userData;
+// 		* The userData will be stored in the database for future use. All Cookies will be destroyed.
+
+
+// 2. If User Not Logged In :
+// 	 Case 1: Just show the initialValues
+
 import { useNavigate, useLocation, createSearchParams } from "react-router-dom"
 import { useState, useEffect, useContext, useRef, createRef } from 'react';
 import userServices from "../services/userServices";
@@ -52,6 +82,10 @@ import { BarLoader } from "react-spinners";
 
 const Create = () => {
 
+	/**
+	 * Social URL Checkers
+	 */
+
 	const FACEBOOK_REGEXP=/^(https?:\/\/)?((w{3}\.)?)facebook.com\/.+/
 	const INSTA_REGEXP=/^(https?:\/\/)?((w{3}\.)?)instagram.com\/.+/
 	const TWITTER_REGEXP=/^(https?:\/\/)?((w{3}\.)?)twitter.com\/([a-zA-Z0-9_]{1,15})\/?/
@@ -60,9 +94,10 @@ const Create = () => {
 	const SKYPE_REGEXP=/^skype:[a-zA-Z0-9_.]+(\?chat)?/
 	const WHATSAPP_REGEXP=/^(https?:\/\/)?wa\.me\/\d+/
 	const PINTEREST_REGEXP=/^(https?:\/\/)?((w{3}\.)?)pinterest.com\/[a-zA-Z0-9_-]+\/?/
+	
 	const navigate = useNavigate();
-	const { showBoundary } = useErrorBoundary();
 	const { state } = useLocation();
+	const { showBoundary } = useErrorBoundary();
 	const { loggerData, setLoggerData } = useContext(LoginContext);
 	const [templates, setTemplates] = useState([]);
 	const [templateSwiper, setTemplateSwiper] = useState(null);
@@ -83,11 +118,8 @@ const Create = () => {
 		whatsapp: false,
 		pinterest: false,
 	});
-	const userDataRef = useRef(null);
-	const loggerRef = useRef(loggerData)
-	const [whatsAppUrl,setWhatsAppUrl] = useState('');
 
-	 
+	const [whatsAppUrl,setWhatsAppUrl] = useState('');
 	const [cropperInstance, setCropperInstance] = useState(null);
 	const { enqueueSnackbar } = useSnackbar();
 	const [warning, setWarning] = useState({
@@ -95,12 +127,12 @@ const Create = () => {
 		designation:{status:false, message:""},
 		email:{status:false, message:""}
 	})
-	// const [isModalOpen, setIsModalOpen] = useState(false);
+	
 	const [imageDetails, setImageDetails] = useState({name:"", mime:""});
-	// const [image, setImage] = useState("");
 	const [cropData, setCropData] = useState("#");
 	const [cropperDimensions, setCropperDimensions] = useState({width:"", height:""})
 	const cropperRef = createRef();
+
 	const [visited, setVisited] = useState({
 		profile:false,
 		banner:false,
@@ -144,8 +176,7 @@ const Create = () => {
 
 	const handleImageLoad = (e) => {
 		setImage(e.target)
-		const aspect = 1; // You can set the desired aspect ratio here
-		// Calculate the initial crop box position to center it
+		const aspect = 1; 
 		const width = e.target.width;
 		const height = e.target.height;
 		const x = (e.target.width - width) / 2;
@@ -154,6 +185,7 @@ const Create = () => {
 		setCrop({ unit: 'px', x:0, y:0, width, height });
 
 	}
+
 	const handleCircularCrop = () => {
 		try {
 			if(!image) return 
@@ -169,6 +201,7 @@ const Create = () => {
 			console.log(error)
 		}
 	}
+
 	const handleSquareCrop = () => {
 		try {
 			if(!image) return 
@@ -184,7 +217,9 @@ const Create = () => {
 			console.log(error)
 		}
 	}
+
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	
 	const showModal = () => {
 	  setIsModalOpen(true);
 	};
@@ -210,10 +245,8 @@ const Create = () => {
 		crop.width,
 		crop.height
 	  )
-	  const base64Image = canvas.toDataURL();
+		const base64Image = canvas.toDataURL();
 		handleImageUpload(base64Image);
-		// setImage(null);
-		// setFile(null);
 	};
 
 	const handleCancel = () => {
@@ -221,12 +254,12 @@ const Create = () => {
 	};
 
 	const createImage = (url) =>
-  new Promise((resolve, reject) => {
-    const image = new Image()
-    image.addEventListener('load', () => resolve(image))
-    image.addEventListener('error', (error) => reject(error))
-    image.setAttribute('crossOrigin', 'anonymous') // needed to avoid cross-origin issues on CodeSandbox
-    image.src = url
+  		new Promise((resolve, reject) => {
+		const image = new Image()
+		image.addEventListener('load', () => resolve(image))
+		image.addEventListener('error', (error) => reject(error))
+		image.setAttribute('crossOrigin', 'anonymous') // needed to avoid cross-origin issues on CodeSandbox
+		image.src = url
   })
    function getRadianAngle(degreeValue) {
 	return (degreeValue * Math.PI) / 180
@@ -260,6 +293,7 @@ const Create = () => {
 		replace: domNode => {
 			try {
 				let props;
+	
 				switch (domNode.attribs && domNode.attribs.id) {
 					// Handling Display Cases - START
 					case ('link-facebook-blk'):
@@ -690,6 +724,7 @@ const Create = () => {
 			}
 		}
 	};
+	
 	const ctaCollapseItems = [
 		{
 			key: '1',
@@ -1081,11 +1116,6 @@ const Create = () => {
 		setTrigger(prev => !prev);
 	}
 
-	// useEffect(()=>{
-	// 	if(localStorage.getItem("template_id")){
-	// 		navigate({ pathname: '/create', search: createSearchParams({ template_id: localStorage.getItem('template_id')?.replace(/["']/g, '') }).toString() });
-	// 	}
-	// },[window.location.pathname])
 
 	console.log('\n\n\n\n\n\n\n')
 	console.log('###### TEMPLATE DATA ######');
@@ -1634,43 +1664,18 @@ const Create = () => {
 		}
 	},[loggerData?.isLoggedIn])
 
-	// useEffect(()=>{
-	// 	if(Object.keys(userData)?.length > 0){
-	// 		localStorage.setItem('userData', JSON.stringify(userData));
-	// 	}
-	// 	if(chosenTemplateData?._id){
-	// 		localStorage.setItem('template_id', JSON.stringify(chosenTemplateData?._id))
-	// 	}
-	// },[
-	// 	userData?.fullName,
-	// 	userData?.logoName,
-	// 	userData?.designation,
-	// 	userData?.phone,
-	// 	userData?.location,
-	// 	userData?.email,
-	// 	userData?.website,
-	// 	userData?.profileImage,
-	// 	userData?.logoImage,
-	// 	userData?.facebook,
-	// 	userData?.instagram,
-	// 	userData?.youtube,
-	// 	userData?.twitter,
-	// 	userData?.linkedIn,
-	// 	userData?.pinterest,
-	// 	userData?.skype,
-	// 	userData?.whatsapp,
-	// 	userData?.disclaimer,
-	// 	userData?.video,
-	// 	userData?.quote,
-	// 	userData?.playStoreAppLink,
-	// 	userData?.appleStoreAppLink,
-	// 	userData?.feedback,
-	// 	userData?.visited?.profile,
-	// 	userData?.visited?.details,
-	// 	userData?.visited?.social,
-	// 	userData?.visited?.cta,
-	//  	chosenTemplateData?._id
-	// ])
+	useEffect(() => {
+		const handleBeforeUnload = (e) => {
+		  e.preventDefault();
+		//   e.returnValue = 'Your data will be lost. Are you sure you want to continue ?'; // This is needed to display the custom message
+		};
+	
+		window.addEventListener('beforeunload', handleBeforeUnload);
+	
+		return () => {
+		  window.removeEventListener('beforeunload', handleBeforeUnload);
+		};
+	}, []);
 
 	useEffect(()=>{
 		
